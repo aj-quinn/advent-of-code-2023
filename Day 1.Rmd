@@ -1,0 +1,143 @@
+---
+title: "Day 1"
+output: html_document
+date: "2023-12-04"
+---
+
+The newly-improved calibration document consists of lines of text; each line originally contained a specific calibration value that the Elves now need to recover. On each line, the calibration value can be found by combining the first digit and the last digit (in that order) to form a single two-digit number.
+
+For example:
+
+1abc2
+pqr3stu8vwx
+a1b2c3d4e5f
+treb7uchet
+In this example, the calibration values of these four lines are 12, 38, 15, and 77. Adding these together produces 142.
+
+Consider your entire calibration document. What is the sum of all of the calibration values?
+
+```{r setup, include=FALSE}
+library(readr)
+library(tidyverse)
+library(stringr)
+```
+
+```{r}
+day_1_input <- read_csv("inputs/day_1_input.csv")
+input <- day_1_input %>% rename(calibration = 1) %>% select(calibration)
+```
+```{r}
+input$numbers <- gsub("\\D", "", input$calibration)
+input$first_num <- substr(input$numbers, 1,1)
+input$last_num <- substr(input$numbers, nchar(input$numbers), nchar(input$numbers))
+```
+
+```{r}
+input <-input %>% mutate (num_added = as.numeric(paste(first_num, last_num, sep=""))) 
+input %>% summarize(sum(num_added))
+```
+Your calculation isn't quite right. It looks like some of the digits are actually spelled out with letters: one, two, three, four, five, six, seven, eight, and nine also count as valid "digits".
+
+Equipped with this new information, you now need to find the real first and last digit on each line. For example:
+
+two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen
+In this example, the calibration values are 29, 83, 13, 24, 42, 14, and 76. Adding these together produces 281.
+
+What is the sum of all of the calibration values?
+
+```{r}
+written_num_to_numeric <- function(calibration){
+  split <- strsplit(calibration, "")[[1]]
+  output<-""
+for (i in 1:length(split)){
+  if(grepl("[^A-Za-z]", split[i])){
+    output <- paste(output, split[i], sep="")
+  }
+  else if(split[i] == 'o'){
+    if (length(split)-i > 1){
+      if(paste(split[i],split[i+1],split[i+2],sep="") == "one"){
+        output <- paste(output, 1, sep="")
+        next
+      }
+    }
+  }
+  else if(split[i] == 't'){
+    if (length(split)-i > 1){
+      if(paste(split[i],split[i+1],split[i+2],sep="") == "two"){
+        output <- paste(output, 2, sep="")
+        next
+      }
+    }
+    if (length(split)-i > 3){
+      if(paste(split[i],split[i+1],split[i+2],split[i+3],split[i+4],sep="") == "three"){
+        output <- paste(output, 3, sep="")
+        next
+      }
+    }
+  }
+  else if(split[i] == 'f'){
+    if (length(split)-i > 2){
+      if(paste(split[i],split[i+1],split[i+2],split[i+3], sep="") == "four"){
+        output <- paste(output, 4, sep="")
+        next
+      }
+    }
+    if (length(split)-i > 2){
+      if(paste(split[i],split[i+1],split[i+2],split[i+3], sep="") == "five"){
+        output <- paste(output, 5, sep="")
+        next
+      }
+    }
+  }
+  else if(split[i] == 's'){
+    if (length(split)-i > 1){
+      if(paste(split[i],split[i+1],split[i+2],sep="") == "six"){
+        output <- paste(output, 6, sep="")
+        next
+      }
+    }
+    if (length(split)-i > 3){
+      if(paste(split[i],split[i+1],split[i+2],split[i+3],split[i+4],sep="") == "seven"){
+        output <- paste(output, 7, sep="")
+        next
+      }
+    }
+  }
+  else if(split[i] == 'e'){
+    if (length(split)-i > 3){
+      if(paste(split[i],split[i+1],split[i+2],split[i+3],split[i+4],sep="") == "eight"){
+        output <- paste(output, 8, sep="")
+        next
+      }
+    }
+  }
+  else if(split[i] == 'n'){
+    if (length(split)-i > 2){
+      if(paste(split[i],split[i+1],split[i+2],split[i+3], sep="") == "nine"){
+        output <- paste(output, 9, sep="")
+        next
+      }
+    }
+  }
+}
+  output
+}
+```
+
+```{r}
+input$new_numbers <- apply(input,1,written_num_to_numeric)
+input$new_first_num <- substr(input$new_numbers, 1,1)
+input$new_last_num <- substr(input$new_numbers, nchar(input$new_numbers), nchar(input$new_numbers))
+```
+
+```{r}
+input<-input %>% mutate (new_num_added = as.numeric(paste(new_first_num, new_last_num, sep=""))) 
+input %>% summarize(sum(new_num_added))
+```
+
